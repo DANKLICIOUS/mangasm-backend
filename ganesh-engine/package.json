@@ -1,0 +1,17 @@
+{
+  "name": "ganesh-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

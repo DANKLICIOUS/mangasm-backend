@@ -1,0 +1,9 @@
+{
+  "crons": [
+    { "path": "/api/collect/stripe", "schedule": "*/15 * * * *" },
+    { "path": "/api/collect/vercel", "schedule": "*/15 * * * *" },
+    { "path": "/api/collect/supabase", "schedule": "*/15 * * * *" },
+    { "path": "/api/collect/system", "schedule": "*/30 * * * *" },
+    { "path": "/api/collect/appstore", "schedule": "0 */6 * * *" }
+  ]
+}

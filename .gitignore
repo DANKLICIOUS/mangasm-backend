@@ -17,3 +17,5 @@ supabase/.temp
 
 # Node
 node_modules/
+ganesh-engine/node_modules/
+ganesh-engine/.env
