@@ -1,21 +1,28 @@
 # Secrets — NEVER commit these
 .env
 .env.local
+.env.*
 *.env
 !.env.example
 ecosystem-builder/.env
+supabase/.env
+supabase/.env.*
+supabase/.env.local
 
 # Outreach: send log + suppression list + drafts contain prospect PII — local only
 ecosystem-builder/outreach-log.json
 ecosystem-builder/optout.txt
 ecosystem-builder/drafts/
 
-# Supabase local
-supabase/.env.local
-supabase/.branches
-supabase/.temp
+# Supabase CLI local state
+supabase/.branches/
+supabase/.temp/
 
 # Node
 node_modules/
 ganesh-engine/node_modules/
 ganesh-engine/.env
+
+# Editor/OS noise
+.DS_Store
+*.swp
