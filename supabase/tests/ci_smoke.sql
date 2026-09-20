@@ -119,4 +119,167 @@ do $$ begin
   end if;
 end $$;
 
+-- ----------------------------------------------------------------------------
+-- Reputation-gated ProfileStyle (migration 0009)
+-- Dedicated member so earlier UGC eject of 1111… does not leak into this suite.
+-- ----------------------------------------------------------------------------
+insert into auth.users (id) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
+
+do $$ begin
+  if (select selected_style_id::text from public.profiles
+        where id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') is distinct from 'calmStudio' then
+    raise exception 'new profile default style is not calmStudio';
+  end if;
+end $$;
+
+-- Unlock map at each reputation tier (catalog order).
+do $$ begin
+  if public.unlocked_profile_styles('new')
+       is distinct from array['calmStudio']::text[] then
+    raise exception 'new tier must unlock only calmStudio';
+  end if;
+  if public.unlocked_profile_styles('building')
+       is distinct from array['calmStudio','aspirational']::text[] then
+    raise exception 'building tier unlock mismatch';
+  end if;
+  if public.unlocked_profile_styles('reliable')
+       is distinct from array['calmStudio','aspirational','precisionTech','digitalFlow']::text[] then
+    raise exception 'reliable tier unlock mismatch';
+  end if;
+  if public.unlocked_profile_styles('verified')
+       is distinct from array['calmStudio','aspirational','precisionTech','digitalFlow','boldExpression']::text[] then
+    raise exception 'verified tier unlock mismatch';
+  end if;
+  if public.unlocked_profile_styles('mystery')
+       is distinct from array['calmStudio']::text[] then
+    raise exception 'unknown tier must fail closed to calmStudio';
+  end if;
+end $$;
+
+-- RPC as this member: default score 0 / tier new / calmStudio only.
+select set_config('test.uid', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', false);
+do $$
+declare
+  r record;
+begin
+  select * into r from public.my_profile_style();
+  if r.score <> 0 or r.tier is distinct from 'new'
+     or r.selected_style_id is distinct from 'calmStudio'
+     or r.unlocked_style_ids is distinct from array['calmStudio']::text[] then
+    raise exception 'my_profile_style default mismatch: % % % %',
+      r.score, r.tier, r.selected_style_id, r.unlocked_style_ids;
+  end if;
+end $$;
+
+-- new (score < 40): reject aspirational.
+do $$ begin
+  update public.profiles
+     set selected_style_id = 'aspirational'
+   where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  raise exception 'new tier should reject aspirational';
+exception when check_violation then null;
+end $$;
+
+-- building boundary (score 40): +aspirational, still reject precisionTech.
+update public.reputation_scores
+   set score = 40, tier = 'building'
+ where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+update public.profiles
+   set selected_style_id = 'aspirational'
+ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+do $$ begin
+  update public.profiles
+     set selected_style_id = 'precisionTech'
+   where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  raise exception 'building tier should reject precisionTech';
+exception when check_violation then null;
+end $$;
+do $$
+declare
+  r record;
+begin
+  select * into r from public.my_profile_style();
+  if r.tier is distinct from 'building'
+     or r.selected_style_id is distinct from 'aspirational'
+     or not ('aspirational' = any (r.unlocked_style_ids))
+     or 'precisionTech' = any (r.unlocked_style_ids) then
+    raise exception 'building RPC mismatch: % % %',
+      r.tier, r.selected_style_id, r.unlocked_style_ids;
+  end if;
+end $$;
+
+-- reliable boundary (score 65): +precisionTech +digitalFlow, reject boldExpression.
+update public.reputation_scores
+   set score = 65, tier = 'reliable'
+ where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+update public.profiles
+   set selected_style_id = 'precisionTech'
+ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+update public.profiles
+   set selected_style_id = 'digitalFlow'
+ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+do $$ begin
+  update public.profiles
+     set selected_style_id = 'boldExpression'
+   where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  raise exception 'reliable tier should reject boldExpression';
+exception when check_violation then null;
+end $$;
+
+-- verified boundary (score 85): all five, including boldExpression.
+update public.reputation_scores
+   set score = 85, tier = 'verified'
+ where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+update public.profiles
+   set selected_style_id = 'boldExpression'
+ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+do $$
+declare
+  r record;
+begin
+  select * into r from public.my_profile_style();
+  if r.tier is distinct from 'verified'
+     or r.selected_style_id is distinct from 'boldExpression'
+     or r.unlocked_style_ids is distinct from
+          array['calmStudio','aspirational','precisionTech','digitalFlow','boldExpression']::text[] then
+    raise exception 'verified RPC mismatch: % % %',
+      r.tier, r.selected_style_id, r.unlocked_style_ids;
+  end if;
+end $$;
+
+-- Unknown style id is not in the enum.
+do $$ begin
+  update public.profiles
+     set selected_style_id = 'neonCyber'
+   where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  raise exception 'unknown style id should be rejected';
+exception
+  when invalid_text_representation then null;
+  when datatype_mismatch then null;
+  when check_violation then null;
+end $$;
+
+-- Demotion grandfathers the already-selected style so other profile edits
+-- still work; changing *to* a newly locked style is still rejected.
+update public.reputation_scores
+   set score = 0, tier = 'new'
+ where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+update public.profiles
+   set display_name = 'kept-style'
+ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+do $$ begin
+  if (select selected_style_id::text from public.profiles
+        where id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+       is distinct from 'boldExpression' then
+    raise exception 'demotion should not auto-clear selected_style_id';
+  end if;
+end $$;
+do $$ begin
+  update public.profiles
+     set selected_style_id = 'aspirational'
+   where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  raise exception 'demoted member should not select a still-locked style';
+exception when check_violation then null;
+end $$;
+
 select 'ALL SMOKE CHECKS PASSED' as result;

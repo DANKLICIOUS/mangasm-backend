@@ -7,6 +7,10 @@
 // product matures. Runs with the service-role key so it can write scores
 // (clients cannot — see RLS in 0002_rls_policies.sql).
 //
+// No Postgres trigger calls this function after vouches/reports/blocks/events.
+// Invoke on a schedule (empty body → sweep) or on-demand `{ userId }`.
+// Cached `tier` is what 0009 uses to unlock ProfileStyle themes.
+//
 // Local run:  supabase functions serve recalculate-score
 // Deploy:     supabase functions deploy recalculate-score --no-verify-jwt
 
