@@ -4,7 +4,7 @@ Deno-based Supabase Edge Functions. Each folder is one deployable function.
 
 | Function                 | Purpose                                                        | Trigger              |
 | ------------------------ | -------------------------------------------------------------- | -------------------- |
-| `recalculate-score`      | Recompute reputation from vouches/reports/blocks/events hosted | cron + on-demand     |
+| `recalculate-score`      | Recompute reputation from vouches/reports/blocks/events hosted | cron + on-demand (no DB triggers on vouch/report/block/event) |
 | `file-report`            | File a report and apply the 2-hour spite-report `timing_flag`  | client (authed)      |
 | `generate-daily-matches` | Up to 5 scored daily matches per Plus member                   | cron + on-demand     |
 | `delete-account`         | GDPR / App Store account deletion (cascade purge)              | client (authed)      |

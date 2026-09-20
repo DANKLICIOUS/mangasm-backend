@@ -26,6 +26,8 @@ supabase/
     0005_matchmaking.sql      # Plus matchmaking: prefs, pgvector taste, results
     0006_purge_conversation.sql  # block/report DM purge RPC
     0007_billing.sql          # Mangasm+ billing tables + membership sync trigger
+    0008_ugc_safety.sql       # terms, content flags, action_report, SLA queue
+    0009_profile_style.sql    # reputation-gated ProfileStyle + my_profile_style RPC
   functions/
     recalculate-score/        # reputation scoring
     file-report/              # report + spite-report shield
@@ -89,6 +91,7 @@ notify pgrst, 'reload schema';
 | `reports`            | Reports + `timing_flag` spite-report shield                 |
 | `vouches`            | Positive-only "thumbs up" (one per ordered pair)            |
 | `reputation_scores`  | Cached 0–100 score + tier (written by edge function only)   |
+| `profiles.selected_style_id` | Cosmetic ProfileStyle; default `calmStudio`; unlocks enforced server-side |
 | `referrals`          | 5-char referral codes                                       |
 | `token_wallets` / `token_transactions` | MGC balance + append-only ledger (balance synced by trigger) |
 | `video_rooms` / `video_room_participants` | 4–8 person live rooms + occupancy |
@@ -116,7 +119,8 @@ PostGIS GiST index. Locations are stored already privacy-adjusted.
   and server environments only. See `.env.example`.
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full data model and
-how the iOS app wires up to this layer.
+how the iOS app wires up to this layer. ProfileStyle column names, the
+`my_profile_style` RPC, and tier thresholds: [`docs/PROFILE_STYLE.md`](docs/PROFILE_STYLE.md).
 
 ## Status / honesty note
 

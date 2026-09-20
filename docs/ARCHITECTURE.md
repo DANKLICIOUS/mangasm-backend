@@ -45,6 +45,11 @@ with the **service-role key**, which never leaves the server.
 3. `recalculate-score` aggregates vouches, events hosted, valid (non-flagged)
    reports, and blocks into a 0–100 score + tier, and upserts
    `reputation_scores`. Clients can read scores but never write them (RLS).
+   There is **no** database trigger that invokes the function after a
+   vouch/report/block/event — run it on a schedule or on-demand.
+4. Cached `tier` unlocks cosmetic `profiles.selected_style_id` values
+   (`0009_profile_style.sql`). iOS should call `my_profile_style()` and
+   treat `unlocked_style_ids` as canonical. See [`PROFILE_STYLE.md`](PROFILE_STYLE.md).
 
 ## Key RLS gates (enforced in DB, mirror these in the app's UI)
 
@@ -54,6 +59,7 @@ with the **service-role key**, which never leaves the server.
 | Vouch           | Account ≥ 14 days, not blocked with the vouchee     |
 | See a profile   | Not banned, not blocked in either direction         |
 | Premium events  | `visibility='premium'` visible only to Plus members |
+| Pick a ProfileStyle | `selected_style_id` must be unlocked by current `reputation_scores.tier` |
 
 ## iOS client wiring (reference)
 
@@ -80,6 +86,9 @@ let events: [Event] = try await client
     .gte("starts_at", value: ISO8601DateFormatter().string(from: Date()))
     .order("starts_at", ascending: true)
     .execute().value
+
+// Reputation-gated ProfileStyle (see docs/PROFILE_STYLE.md)
+let style: MyProfileStyle = try await client.rpc("my_profile_style").execute().value
 ```
 
 > Keys belong in a gitignored `Config.xcconfig` referenced from `Info.plist`
@@ -98,6 +107,9 @@ let events: [Event] = try await client
   taste embedding (cosine ANN index), and `match_results`. The
   `generate-daily-matches` edge function scores nearby candidates and writes up
   to 5 results per member per day.
+- **ProfileStyle** (`0009`) — `profiles.selected_style_id` unlocked by
+  `reputation_scores.tier`; `my_profile_style()` is the iOS one-round-trip
+  contract. Canonical doc: [`PROFILE_STYLE.md`](PROFILE_STYLE.md).
 
 ## CI
 
@@ -105,6 +117,10 @@ let events: [Event] = try await client
 every migration against the `supabase/tests/shim.sql` Supabase shim, runs
 `supabase/tests/ci_smoke.sql`, and re-applies the migrations to prove
 idempotency — on every push that touches the schema.
+
+Canonical migrations are **this** repo. The iOS app repo has a divergent
+`supabase/` tree (`0001_mangasm_init.sql`, `profiles.rep_score`, …). Do not
+`db push` both against one project. See [`PROFILE_STYLE.md`](PROFILE_STYLE.md).
 
 ## Still to layer on
 
