@@ -282,4 +282,21 @@ do $$ begin
 exception when check_violation then null;
 end $$;
 
+-- ProfileStyle is verified in migration 0009.
+-- Verify referrals insert own policy.
+select set_config('test.uid', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', false);
+insert into public.referrals (code, owner_id) values ('WOLF1', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
+do $$ begin
+  if (select count(*) from public.referrals where owner_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') <> 1 then
+    raise exception 'referral row was not inserted';
+  end if;
+end $$;
+
+-- Verify room occupancy function execution.
+do $$ begin
+  if public.room_occupancy('33333333-3333-3333-3333-333333333333') <> 2 then
+    raise exception 'authenticated user could not read room_occupancy';
+  end if;
+end $$;
+
 select 'ALL SMOKE CHECKS PASSED' as result;

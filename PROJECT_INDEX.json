@@ -16,13 +16,20 @@
     "0002_rls_policies.sql",
     "0003_tokens.sql",
     "0004_video_rooms.sql",
-    "0005_matchmaking.sql"
+    "0005_matchmaking.sql",
+    "0006_purge_conversation.sql",
+    "0007_billing.sql",
+    "0008_ugc_safety.sql",
+    "0009_profile_style.sql"
   ],
   "edge_functions": [
     "recalculate-score",
     "file-report",
     "generate-daily-matches",
-    "delete-account"
+    "delete-account",
+    "stripe-checkout",
+    "stripe-webhook",
+    "revenue-metrics"
   ],
   "entities": [
     "profiles",
@@ -34,6 +41,10 @@
     "reports",
     "vouches",
     "reputation_scores",
+    "terms_acceptances",
+    "moderation_actions",
+    "billing_customers",
+    "billing_subscriptions",
     "tokens",
     "video_rooms",
     "matchmaking"

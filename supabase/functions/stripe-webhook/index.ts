@@ -51,7 +51,9 @@ async function upsertSubscription(sub: Stripe.Subscription) {
     source: "stripe",
     status: sub.status,
     price_id: sub.items.data[0]?.price?.id ?? null,
-    current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+    current_period_end: sub.current_period_end
+      ? new Date(sub.current_period_end * 1000).toISOString()
+      : null,
     cancel_at_period_end: sub.cancel_at_period_end,
   });
 }

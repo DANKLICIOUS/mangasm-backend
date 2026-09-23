@@ -3,9 +3,8 @@
 // in public.reputation_scores. Intended to run on a schedule (pg_cron / cron
 // trigger) and/or be invoked for a single user after a relevant event.
 //
-// This is a STUB with the real scoring shape wired up. Tune the weights as the
-// product matures. Runs with the service-role key so it can write scores
-// (clients cannot — see RLS in 0002_rls_policies.sql).
+// Tune the weights as the product matures. Runs with the service-role key so
+// it can write scores (clients cannot — see RLS in 0002_rls_policies.sql).
 //
 // No Postgres trigger calls this function after vouches/reports/blocks/events.
 // Invoke on a schedule (empty body → sweep) or on-demand `{ userId }`.
@@ -29,7 +28,15 @@ function tierFor(score: number): string {
   return "new";
 }
 
-async function scoreForUser(userId: string): Promise<number> {
+interface UserMetrics {
+  score: number;
+  vouchCount: number;
+  eventsHosted: number;
+  validReports: number;
+  blockCount: number;
+}
+
+async function computeMetricsForUser(userId: string): Promise<UserMetrics> {
   // Positive signals
   const { count: vouchCount } = await supabase
     .from("vouches").select("*", { count: "exact", head: true })
@@ -48,15 +55,26 @@ async function scoreForUser(userId: string): Promise<number> {
     .from("blocks").select("*", { count: "exact", head: true })
     .eq("blocked_id", userId);
 
+  const vCount = vouchCount ?? 0;
+  const eHosted = eventsHosted ?? 0;
+  const vReports = validReports ?? 0;
+  const bCount = blockCount ?? 0;
+
   const base = 50;
   const score =
     base +
-    (vouchCount ?? 0) * 3 +
-    (eventsHosted ?? 0) * 2 -
-    (validReports ?? 0) * 8 -
-    (blockCount ?? 0) * 1;
+    vCount * 3 +
+    eHosted * 2 -
+    vReports * 8 -
+    bCount * 1;
 
-  return Math.max(0, Math.min(100, Math.round(score)));
+  return {
+    score: Math.max(0, Math.min(100, Math.round(score))),
+    vouchCount: vCount,
+    eventsHosted: eHosted,
+    validReports: vReports,
+    blockCount: bCount,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -77,11 +95,13 @@ Deno.serve(async (req) => {
     }
 
     for (const id of ids) {
-      const score = await scoreForUser(id);
+      const metrics = await computeMetricsForUser(id);
       await supabase.from("reputation_scores").upsert({
         user_id: id,
-        score,
-        tier: tierFor(score),
+        score: metrics.score,
+        tier: tierFor(metrics.score),
+        vouch_count: metrics.vouchCount,
+        report_weight: metrics.validReports,
         updated_at: new Date().toISOString(),
       });
     }
@@ -96,3 +116,4 @@ Deno.serve(async (req) => {
     });
   }
 });
+

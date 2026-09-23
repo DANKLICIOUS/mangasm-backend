@@ -5,7 +5,7 @@ import type { Severity, CollectorResult } from "../types.js";
 // intentionally NOT idempotent/upserted like business signals, since each
 // failure is a distinct event). Escalates to ganesh.alerts on CRITICAL.
 // Never throws: a failure to log health must not itself crash the caller
-// (constraint 5 — fail-soft all the way down).
+// (fail-soft all the way down).
 export async function logHealthSignal(
   source: string,
   severity: Severity,
@@ -38,7 +38,7 @@ export async function logHealthSignal(
 
 // Wraps a collector so external API failures never propagate as unhandled
 // rejections: catch, log a WARNING signal, and return a clean result object
-// instead (constraint 5).
+// instead.
 export async function runCollectorSafely(
   source: string,
   fn: () => Promise<number>,
@@ -52,3 +52,4 @@ export async function runCollectorSafely(
     return { source, ok: false, signalsIngested: 0, error: message };
   }
 }
+

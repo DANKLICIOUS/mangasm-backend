@@ -1,4 +1,4 @@
-export const config = { runtime: "edge" };
+export const config = { runtime: "nodejs" };
 
 import { requireCronAuth, jsonResponse } from "../_shared.js";
 import { runCollectorSafely } from "../../src/lib/health.js";

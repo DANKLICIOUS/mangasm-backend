@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { userId, lat, lng } = await req.json();
+    const { userId, lat, lng } = await req.json().catch(() => ({}));
     if (!userId || lat == null || lng == null) {
       return json({ error: "userId, lat, lng required" }, 400);
     }
@@ -62,10 +62,11 @@ Deno.serve(async (req) => {
       .slice(0, DAILY_LIMIT);
 
     if (scored.length) {
-      await supabase.from("match_results").upsert(
+      const { error: upsertError } = await supabase.from("match_results").upsert(
         scored.map((s: any) => ({ user_id: userId, ...s, match_date: new Date().toISOString().slice(0, 10) })),
         { onConflict: "user_id,matched_user_id,match_date" },
       );
+      if (upsertError) throw upsertError;
     }
 
     return json({ generated: scored.length });

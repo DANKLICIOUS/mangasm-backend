@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { reportedId, reason, details } = await req.json();
+    const { reportedId, reason, details, contentType, contentId } = await req.json();
     if (!reportedId || !reason) {
       return new Response(JSON.stringify({ error: "reportedId and reason required" }), {
         status: 400,
@@ -65,6 +65,8 @@ Deno.serve(async (req) => {
         reported_id: reportedId,
         reason,
         details: details ?? null,
+        content_type: contentType ?? null,
+        content_id: contentId ?? null,
         timing_flag: timingFlag,
       })
       .select()

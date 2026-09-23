@@ -41,11 +41,12 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 function monthlyCents(item: Stripe.SubscriptionItem): number {
   const price = item.price;
   if (!price?.unit_amount || !price.recurring) return 0;
-  const { interval, interval_count } = price.recurring;
-  const months = interval === "year" ? 12 * interval_count
-    : interval === "month" ? interval_count
-    : interval === "week" ? interval_count / 4.345
-    : interval_count / 30.44; // day
+  const { interval, interval_count = 1 } = price.recurring;
+  const count = interval_count || 1;
+  const months = interval === "year" ? 12 * count
+    : interval === "month" ? count
+    : interval === "week" ? count / 4.345
+    : count / 30.44; // day
   return Math.round(price.unit_amount / months);
 }
 
@@ -146,10 +147,12 @@ Deno.serve(async (req) => {
     .select("*", { count: "exact", head: true })
     .in("membership", ["plus", "plus_plus"]);
 
+  const stripeSecret = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+
   return new Response(
     JSON.stringify({
       generated_at: new Date(now).toISOString(),
-      livemode: !Deno.env.get("STRIPE_SECRET_KEY")!.startsWith("sk_test"),
+      livemode: !stripeSecret.startsWith("sk_test"),
       mrr_cents: mrrCents,
       active_subscriptions: live.length,
       by_plan: byPlan,

@@ -165,3 +165,9 @@ drop policy if exists referrals_select_own on public.referrals;
 create policy referrals_select_own on public.referrals
   for select to authenticated
   using (owner_id = auth.uid());
+
+drop policy if exists referrals_insert_own on public.referrals;
+create policy referrals_insert_own on public.referrals
+  for insert to authenticated
+  with check (owner_id = auth.uid());
+

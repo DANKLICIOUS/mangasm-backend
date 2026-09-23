@@ -276,7 +276,7 @@ returns table (
   is_verified  boolean,
   distance_m   double precision
 )
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, extensions as $$
   select p.id, p.handle, p.display_name, p.avatar_url, p.tags,
          p.status, p.membership, p.is_verified,
          st_distance(p.location, st_makepoint(lng, lat)::geography) as distance_m

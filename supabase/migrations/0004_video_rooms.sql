@@ -41,6 +41,10 @@ returns integer language sql stable security definer set search_path = public as
   where room_id = room and left_at is null;
 $$;
 
+revoke all on function public.room_occupancy(uuid) from public;
+grant execute on function public.room_occupancy(uuid) to authenticated;
+
+
 -- ------------------------------------------------------------------- RLS -----
 alter table public.video_rooms             enable row level security;
 alter table public.video_room_participants enable row level security;
