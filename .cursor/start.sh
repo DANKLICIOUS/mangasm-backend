@@ -19,7 +19,10 @@ sudo useradd --create-home --shell /usr/sbin/nologin pgci 2>/dev/null || true
 sudo mkdir -p "$PGDATA"
 sudo chown pgci:pgci "$PGDATA"
 
-if [[ ! -f "$PGDATA/PG_VERSION" ]]; then
+# Data dir is mode 700 and owned by pgci, so the ubuntu user cannot see
+# PG_VERSION. `sudo test` is required; a plain [[ -f ]] is a false negative
+# and would try to initdb over a live cluster.
+if ! sudo test -f "$PGDATA/PG_VERSION"; then
   sudo -u pgci "$PGBIN/initdb" -D "$PGDATA" -U pgci -A trust
 fi
 
