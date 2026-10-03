@@ -64,3 +64,24 @@ CLAUDE (web) ──push──► GitHub repo ◄──push── GROK CLI (local
 - Claude Code (web) works on branch `claude/grok-empire-systems-setup-x4bdg3`.
 - Grok CLI clones the same repo, reads this file + `docs/EMPIRE.md`, and
   continues. Whoever pushes, the other pulls. That is the whole link.
+
+## Cursor Cloud specific instructions
+
+Local proof of this repo is the same path as `.github/workflows/db-ci.yml`:
+PostgreSQL 16 + PostGIS + pgvector, not the hosted Supabase project and not
+`supabase start` (that needs Docker and a linked project).
+
+- Install once: `bash .cursor/install.sh` (Postgres packages + `npm ci` in
+  `ganesh-engine`). Cloud Agents run this from the environment install step.
+- Database: `bash .cursor/start.sh` starts a trust-auth cluster as user `pgci`
+  on port **5433**, socket `/tmp`, data dir `/var/lib/mangasm-pg`, then applies
+  `supabase/tests/shim.sql` and `supabase/migrations/*.sql`. Re-running it is
+  safe. Connect with:
+  `psql -h /tmp -p 5433 -U pgci -d postgres`
+- Smoke test (inserts fixture rows; run on a fresh cluster, not twice):
+  `psql -h /tmp -p 5433 -U pgci -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/ci_smoke.sql`
+  To reset first: stop the cluster, `sudo rm -rf /var/lib/mangasm-pg`, then
+  start again.
+- Ganesh engine check: `npm run typecheck --prefix ganesh-engine`
+- Hosted keys (`supabase/.env.local`, Stripe, admin tokens) are not required
+  for the local cluster or the smoke test. Never commit them.
