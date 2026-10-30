@@ -1,0 +1,93 @@
+:root {
+  color-scheme: dark;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #f1edf8;
+  background: #090810;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at 75% 30%, #32204780, transparent 55%);
+}
+a { color: inherit; text-decoration: none; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible { outline: 2px solid #cbabff; outline-offset: 8px; }
+#storm, .grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#storm { z-index: -1; }
+.grain {
+  z-index: 2;
+  opacity: .035;
+  background-image: repeating-linear-gradient(0deg, transparent 0 2px, #fff 3px 4px);
+}
+header, footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+header { padding: 30px 5vw; }
+.wordmark { font-size: 23px; font-weight: 700; letter-spacing: -.06em; }
+.wordmark span, .edition, button, .eyebrow, .scene-meta, figcaption, footer {
+  font-size: 10px;
+  letter-spacing: .16em;
+  line-height: 1.6;
+}
+.wordmark span { margin-left: 16px; font-weight: 400; }
+.edition, .muted { color: #a8a1b6; }
+button {
+  border: 1px solid #bcb0d359;
+  border-radius: 30px;
+  padding: 12px 18px;
+  background: #100d1c99;
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled { cursor: default; opacity: .55; }
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: 4vh 5vw 0;
+  gap: 30px;
+}
+.intro { position: relative; z-index: 1; padding: 30px 0; }
+.eyebrow { color: #c7b7e1; }
+.spark { display: inline-block; width: 6px; height: 6px; background: #c299ff; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 18px #c299ff; }
+h1 { font-weight: 400; font-size: clamp(62px, 9.5vw, 150px); letter-spacing: -.085em; line-height: .95; margin: 35px 0; }
+h1 span { color: #c9bbdf; }
+.subtitle { font-size: clamp(27px, 3.5vw, 50px); font-weight: 300; letter-spacing: -.04em; line-height: 1.1; }
+.description { max-width: 340px; font-size: 14px; color: #b7afc7; line-height: 1.8; }
+.explore { display: inline-flex; align-items: center; gap: 40px; margin-top: 25px; border-bottom: 1px solid #aa92d4; padding: 0 0 12px; font-size: 13px; }
+.explore span { font-size: 24px; }
+.portrait {
+  position: relative;
+  width: min(100%, 500px);
+  justify-self: center;
+  margin: 0;
+  aspect-ratio: 784 / 1168;
+  max-height: 76vh;
+  border: 1px solid #c9b3f027;
+  background: radial-gradient(ellipse, #6e3ab533, transparent 70%);
+}
+.portrait img { position: relative; display: block; width: 100%; height: 100%; object-fit: contain; background: #090810; }
+.portrait img[hidden] { display: none; }
+.sigil { position: absolute; inset: 0; display: grid; place-items: center; font-size: clamp(140px, 25vw, 350px); color: #d6c0ff; text-shadow: 0 0 70px #a268ff; }
+figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 15px; color: #ded5ec; background: #090810e6; font-size: 9px; }
+.scene-meta { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 15px; padding: 25px 0; border-bottom: 1px solid #d7c5f02b; }
+#render-status { color: #c2a5ee; }
+.lore { grid-column: 1 / -1; padding: 90px 0; }
+h2 { font-family: Georgia, serif; font-weight: 400; font-size: clamp(30px, 4vw, 58px); line-height: 1.2; }
+.lore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; max-width: 800px; }
+h3 { font-weight: 400; font-size: 18px; }
+.lore-grid p { font-size: 14px; line-height: 1.8; color: #b7afc7; }
+footer { border-top: 1px solid #d7c5f02b; padding: 30px 5vw; color: #a8a1b6; }
+@media (max-width: 720px) {
+  .edition, .wordmark span { display: none; }
+  main { grid-template-columns: 1fr; padding-top: 0; }
+  .intro { padding-bottom: 10px; }
+  h1 { font-size: clamp(60px, 15vw, 108px); }
+  .portrait { max-height: none; width: min(100%, 420px); }
+  .scene-meta { flex-wrap: wrap; font-size: 9px; }
+  .lore { padding: 40px 0; }
+  .lore-grid { grid-template-columns: 1fr; gap: 10px; }
+  footer { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

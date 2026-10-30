@@ -48,6 +48,34 @@ docs/
 
 ## Quick start
 
+### Standalone WebGL character demo
+
+`webgl-demo/` is an isolated, dependency-free **Astral Echoes / Masteroid**
+character study, not a Mangasm client or a Ganesh dashboard. It uses an original
+violet storm shader, drifting particles, and pointer-responsive parallax.
+It does not connect to Supabase, load credentials, or deploy anything.
+
+To preview locally (requires Node/npm and Python 3):
+
+```bash
+cd webgl-demo
+npm start
+```
+
+Open http://127.0.0.1:8080. No install or build step is needed. The supplied
+artwork is loaded from its GitHub attachment URL without a referrer; if the URL
+is unavailable, a storm sigil is shown instead. That URL returned 404 during
+implementation. To use a local copy, place the artwork in `webgl-demo/` and
+change the image `src` in `webgl-demo/index.html`.
+
+The demo starts still when reduced motion is requested, includes a keyboard-
+accessible motion toggle, pauses in hidden tabs, caps render resolution, and
+falls back to CSS when WebGL is unavailable. No audio or flashing lightning
+is used. To check manually: toggle motion, resize to mobile, enable reduced
+motion, and disable WebGL or block the image request to exercise the fallbacks.
+The igloo.inc reference could not be reached during implementation; no code
+or assets from that site are included.
+
 ### Option A — Supabase CLI (recommended)
 
 ```bash
